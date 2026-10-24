@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ashwin Gowda // Creative Engineer & AI Architect</title>
-    <meta name="description" content="The experimental, cinematic spacetime portfolio of Ashwin Gowda, specializing in B.E. AI & Data Science, peer-to-peer WebRTC architectures, and PyTorch Vision Transformers.">
+    <title>Ashwin Gowda // AI & Data Science Portfolio</title>
+    <meta name="description" content="The cinematic spacetime portfolio of Ashwin Gowda, a B.E. Artificial Intelligence & Data Science student at Ramaiah Institute of Technology building real-time media systems and applied machine learning projects.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%22%2300f0ff%22>Φ</text></svg>">
     
     <!-- Google Fonts: Space Grotesk (Editorial Headers) & Outfit (Body Copy) -->
@@ -13,6 +13,29 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
+
+    <!-- Static fallback if JavaScript is unavailable: keep all content readable -->
+    <noscript>
+        <style>
+            #preloader { display: none !important; }
+            #viewport { display: none !important; }
+            .scroll-track-container { height: auto !important; }
+            .story-section {
+                position: relative !important;
+                height: auto !important;
+                min-height: 100vh;
+                padding: 12vh 10% !important;
+                overflow: visible !important;
+            }
+            .section-content {
+                opacity: 1 !important;
+                transform: none !important;
+                filter: none !important;
+                pointer-events: auto !important;
+            }
+            .left-panel, .right-panel { opacity: 1 !important; }
+        </style>
+    </noscript>
     
     <!-- GSAP for Ultra-Premium Cinematic Stagger Animations -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -59,7 +82,7 @@
     </nav>
 
     <!-- Interactive Procedural Audio Control Toggle -->
-    <button id="audio-toggle" class="audio-control-btn" aria-label="Toggle Immersive Soundscape">
+    <button id="audio-toggle" class="audio-control-btn" aria-label="Toggle Immersive Soundscape" aria-pressed="false">
         <div class="audio-waves" id="audio-waves-visualizer">
             <span class="wave-bar"></span>
             <span class="wave-bar"></span>
@@ -93,7 +116,7 @@
                 <div class="meta-label">02 // BRANCH MATRIX</div>
                 <h2 class="editorial-heading">AI & DATA SCIENCE</h2>
                 <p class="editorial-paragraph">
-                    Pursuing B.E. in Artificial Intelligence & Data Science at Ramaiah Institute of Technology (CGPA: 9.3). Bending mathematical learning vectors into software realities. Obsessed with neural networks representations, Computer Vision segmentation models, and low-latency system architectures.
+                    Pursuing B.E. in Artificial Intelligence & Data Science at Ramaiah Institute of Technology (CGPA: 9.39). Bending mathematical learning vectors into software realities. Focused on computer vision, thermal-imaging models, and low-latency system architectures.
                 </p>
             </div>
         </section>
@@ -107,41 +130,44 @@
                 <!-- Spacetime Project Grid -->
                 <div class="projects-spacetime-grid">
                     
-                    <div class="project-glass-card" id="project-rtc">
+                    <a class="project-glass-card" id="project-rtc" href="https://github.com/LelouchelawlietLIEBERT/rtc" target="_blank" rel="noopener noreferrer" aria-label="View the Real-Time Video Conferencing source code on GitHub">
                         <div class="card-glow"></div>
                         <span class="project-num">01 // WEB PROTOCOLS</span>
                         <h3 class="project-title">VIDEO CONFERENCING</h3>
                         <p class="project-desc">
-                            Engineered a peer-to-peer room-based video system with custom WebRTC signaling. Configured ICE candidate exchange and STUN/TURN traversal over NAT.
+                            Room-based peer-to-peer video system with WebRTC and a custom Socket.io signaling layer. Handles SDP exchange, ICE candidate negotiation, and STUN/TURN traversal over NAT.
                         </p>
                         <div class="project-tech-tags">
                             <span>WebRTC</span><span>Node.js</span><span>Socket.io</span>
                         </div>
-                    </div>
+                        <span class="project-source-link">VIEW SOURCE <span aria-hidden="true">↗</span></span>
+                    </a>
 
-                    <div class="project-glass-card" id="project-chess">
+                    <a class="project-glass-card" id="project-chess" href="https://github.com/LelouchelawlietLIEBERT/chess" target="_blank" rel="noopener noreferrer" aria-label="View the Real-Time Multiplayer Chess source code on GitHub">
                         <div class="card-glow"></div>
                         <span class="project-num">02 // REAL-TIME LOGIC</span>
                         <h3 class="project-title">MULTIPLAYER CHESS</h3>
                         <p class="project-desc">
-                            Designed real-time matchmaking, move synchronization, and game state validation with low-latency WebSockets. Built scalable backends to handle concurrent loops.
+                            Server-authoritative chess platform with matchmaking, server-validated moves, live clocks, premoves, and in-game chat over Socket.io. The backend owns the game state and broadcasts confirmed updates.
                         </p>
                         <div class="project-tech-tags">
-                            <span>WebSockets</span><span>React</span><span>Node.js</span>
+                            <span>Socket.io</span><span>React</span><span>Node.js</span>
                         </div>
-                    </div>
+                        <span class="project-source-link">VIEW SOURCE <span aria-hidden="true">↗</span></span>
+                    </a>
 
-                    <div class="project-glass-card" id="project-vit">
+                    <a class="project-glass-card" id="project-thermal" href="https://github.com/LelouchelawlietLIEBERT/thermal-cnn" target="_blank" rel="noopener noreferrer" aria-label="View the Thermal Defect Detection source code on GitHub">
                         <div class="card-glow"></div>
                         <span class="project-num">03 // COMPUTER VISION</span>
-                        <h3 class="project-title">VISION TRANSFORMER</h3>
+                        <h3 class="project-title">THERMAL DEFECT DETECTION</h3>
                         <p class="project-desc">
-                            Implemented Vision Transformer (ViT) with multi-head self-attention on CIFAR-10. Integrated GroundingDINO and SAM for prompt-based mask segmentations.
+                            Physics-informed multi-label quality control for injection moulding. EfficientNet-B0 consumes raw thermal matrices with gradient channels, paired with a GCN label head, SimCLR pre-training, and MC-dropout uncertainty.
                         </p>
                         <div class="project-tech-tags">
-                            <span>PyTorch</span><span>SAM</span><span>OpenCV</span>
+                            <span>PyTorch</span><span>EfficientNet-B0</span><span>GCN</span>
                         </div>
-                    </div>
+                        <span class="project-source-link">VIEW SOURCE <span aria-hidden="true">↗</span></span>
+                    </a>
 
                 </div>
             </div>
@@ -155,18 +181,18 @@
                 <div class="hologram-panel left-panel">
                     <div class="panel-scanner"></div>
                     <span class="panel-meta">// COGNITIVE ARCHIVE</span>
-                    <h3 class="panel-title">CREATIVE CODING</h3>
+                    <h3 class="panel-title">CODING PRACTICE</h3>
                     <div class="panel-divider"></div>
                     <div class="panel-content-block">
                         <h4 class="block-subtitle">01 / EXPERIMENTAL MINDSET</h4>
                         <p class="block-text">
-                            Writing code as highly interactive architectural choreography. Bending logic matrices into premium digital experiences that respond organically to presence.
+                            Writing code as highly interactive architectural choreography. Building software that responds organically to presence, from real-time interfaces to browser-rendered visual systems.
                         </p>
                     </div>
                     <div class="panel-content-block">
-                        <h4 class="block-subtitle">02 / KINETIC PARADIGMS</h4>
+                        <h4 class="block-subtitle">02 / COMPETITIVE RECORD</h4>
                         <p class="block-text">
-                            Drawing inspiration from sci-fi anime interfaces and high-end video game VFX to challenge flat, traditional expectations of the browser.
+                            Solved 500+ algorithmic problems across LeetCode and HackerRank. Winner, 22 Yards of Code at CodeRIT; second runner-up, CodeSprint at GDG NMIT; finalist, wHACKiest BioTwin hackathon.
                         </p>
                     </div>
                 </div>
@@ -187,15 +213,15 @@
                     <h3 class="panel-title">TECHNOLOGY CODES</h3>
                     <div class="panel-divider"></div>
                     <div class="panel-content-block">
-                        <h4 class="block-subtitle">01 / NEURAL CODES & CV</h4>
+                        <h4 class="block-subtitle">01 / ML & COMPUTER VISION</h4>
                         <p class="block-text">
-                            Engineering deep computer vision models, custom PyTorch Vision Transformers (ViT), and promptable Segment Anything (SAM) object outlines.
+                            Building PyTorch and TensorFlow models for thermal-imaging classification: EfficientNet-B0 backbones, graph convolutional label heads, SimCLR pre-training, and uncertainty-aware inference.
                         </p>
                     </div>
                     <div class="panel-content-block">
                         <h4 class="block-subtitle">02 / MEDIA SYSTEMS</h4>
                         <p class="block-text">
-                            Bending real-time peer-to-peer WebRTC signaling networks, low-latency Socket.io loops, and procedural audio synthesis architectures.
+                            Engineering real-time peer-to-peer WebRTC signaling, low-latency Socket.io communication, server-authoritative game state, and Node.js backend APIs.
                         </p>
                     </div>
                 </div>
@@ -208,7 +234,7 @@
             <div class="section-content text-center light-text full-page-content">
                 <div class="meta-label font-gold">// ARCHITECT MATRIX // IDENTITY UNLOCKED</div>
                 <h1 class="profile-main-title">ASHWIN GOWDA</h1>
-                <p class="profile-hero-subtitle">Creative Engineer & AI Architect</p>
+                <p class="profile-hero-subtitle">AI & Data Science Student // Full-Stack & ML Engineer</p>
                 
                 <!-- Simplified Luxury Editorial Bio Manifest -->
                 <div class="minimalist-profile-manifest">
@@ -218,12 +244,12 @@
                         <div class="manifest-block">
                             <span class="manifest-block-meta">AI BRANCH</span>
                             <span class="manifest-block-val">B.E. in Artificial Intelligence & Data Science</span>
-                            <span class="manifest-block-sub">Ramaiah Institute of Technology // CGPA: 9.3</span>
+                            <span class="manifest-block-sub">Ramaiah Institute of Technology, Bengaluru // CGPA: 9.39 // Expected 2027</span>
                         </div>
                         <div class="manifest-block">
                             <span class="manifest-block-meta">CORE OBSESSIONS</span>
-                            <span class="manifest-block-val">Low-Latency Media Architectures & PyTorch Segmentation</span>
-                            <span class="manifest-block-sub">WebRTC, Socket.io, Vision Transformers, and Cloud simulations</span>
+                            <span class="manifest-block-val">Real-Time Media Systems & Applied Machine Learning</span>
+                            <span class="manifest-block-sub">WebRTC, Socket.io, PyTorch, EfficientNet-B0, and server-validated multiplayer systems</span>
                         </div>
                     </div>
                 </div>
@@ -236,7 +262,7 @@
                         
                         <!-- GITHUB CAPSULE -->
                         <div class="social-capsule-item">
-                            <a href="https://github.com/LelouchelawlietLIEBERT" target="_blank" class="circle-social-icon-btn" aria-label="GitHub Profile">
+                            <a href="https://github.com/LelouchelawlietLIEBERT" target="_blank" rel="noopener noreferrer" class="circle-social-icon-btn" aria-label="Ashwin Gowda on GitHub">
                                 <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="svg-social-icon">
                                     <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                                 </svg>
@@ -246,7 +272,7 @@
 
                         <!-- LINKEDIN CAPSULE -->
                         <div class="social-capsule-item">
-                            <a href="https://linkedin.com/in/ashwin-gowda-1a68a22b9" target="_blank" class="circle-social-icon-btn" aria-label="LinkedIn Profile">
+                            <a href="https://linkedin.com/in/ashwin-gowda-1a68a22b9" target="_blank" rel="noopener noreferrer" class="circle-social-icon-btn" aria-label="Ashwin Gowda on LinkedIn">
                                 <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="svg-social-icon">
                                     <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
                                     <rect x="2" y="9" width="4" height="12"></rect>

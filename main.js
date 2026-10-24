@@ -6,9 +6,24 @@
 const TOTAL_FRAMES = 240;
 const SINGULARITY_FRAME = 180; // Singularity transition occurs at frame 180 (scroll 75%)
 const IMAGES_DIR = './public/frames/';
+const FRAME_PREFIX = 'ezgif-frame-';
+const FRAME_EXTENSION = '.jpg';
+const FRAME_PAD_LENGTH = 3; // Assets are ezgif-frame-001.jpg ... ezgif-frame-240.jpg
+const INITIAL_PRELOAD_COUNT = 24; // Enough frames to cover the opening section instantly
+const PRELOAD_CONCURRENCY = 4;
+
+// Verified frame sequence built from the real files under public/frames/
+const frameUrl = (frameIndex) => {
+    const frameNumber = String(frameIndex + 1).padStart(FRAME_PAD_LENGTH, '0');
+    return `${IMAGES_DIR}${FRAME_PREFIX}${frameNumber}${FRAME_EXTENSION}`;
+};
 
 // State Variables
-const images = [];
+const images = new Array(TOTAL_FRAMES).fill(null);
+const frameStatus = new Uint8Array(TOTAL_FRAMES); // 0 = idle, 1 = loading, 2 = ready, 3 = failed
+const framePromises = new Array(TOTAL_FRAMES).fill(null);
+let loadedFrameCount = 0;
+let failedFrameCount = 0;
 let scrollPercent = 0;
 let currentFrame = 0;
 let targetFrame = 0;
@@ -17,6 +32,7 @@ let smoothScrollY = 0;
 const scrollEasing = 0.08; // Glides smoothly behind scroll Y
 let isLoaded = false;
 let lastScrollY = 0;
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Technical Skills Constellation Configurations
 const skillWords = [
@@ -54,47 +70,179 @@ let delayNode = null;
 let audioEnabled = false;
 
 /* =========================================================================
-   1. PROGRESSIVE PRELOADER & IMAGE CACHE (ACTUAL LOAD IN BACKGROUND)
+   1. PROGRESSIVE FRAME PRELOADER (REAL ASSETS, BOUNDED CONCURRENCY)
    ========================================================================= */
-const preloadImages = () => {
-    return new Promise((resolve) => {
-        const preloaderPercentage = document.getElementById('preloader-percentage');
-        const preloaderFill = document.getElementById('preloader-fill');
-        const preloader = document.getElementById('preloader');
-        
-        let progress = 0;
-        const duration = 1200; // 1.2 second beautiful high-speed calibration sweep
-        const startTime = performance.now();
-        
-        const updateProgress = (now) => {
-            const elapsed = now - startTime;
-            progress = Math.min(1.0, elapsed / duration);
-            
-            const percent = Math.round(progress * 100);
-            
-            // Update UI elements
-            if (preloaderPercentage) {
-                preloaderPercentage.textContent = String(percent).padStart(2, '0');
-            }
-            if (preloaderFill) {
-                preloaderFill.style.width = `${percent}%`;
-            }
-            
-            if (progress < 1.0) {
-                requestAnimationFrame(updateProgress);
+const updatePreloaderUI = (percent) => {
+    const preloaderPercentage = document.getElementById('preloader-percentage');
+    const preloaderFill = document.getElementById('preloader-fill');
+    const safePercent = Math.max(0, Math.min(100, Math.round(percent)));
+
+    if (preloaderPercentage) {
+        preloaderPercentage.textContent = String(safePercent).padStart(2, '0');
+    }
+    if (preloaderFill) {
+        preloaderFill.style.width = `${safePercent}%`;
+    }
+};
+
+const loadFrame = (index) => {
+    if (index < 0 || index >= TOTAL_FRAMES) {
+        return Promise.resolve(null);
+    }
+
+    if (frameStatus[index] === 2) {
+        return Promise.resolve(images[index]);
+    }
+    if (frameStatus[index] === 3) {
+        return Promise.resolve(null);
+    }
+    if (frameStatus[index] === 1) {
+        return framePromises[index];
+    }
+
+    frameStatus[index] = 1;
+
+    framePromises[index] = new Promise((resolve) => {
+        const img = new Image();
+        img.decoding = 'async';
+        img.fetchPriority = index < INITIAL_PRELOAD_COUNT ? 'high' : 'low';
+
+        const settle = (loaded) => {
+            if (loaded) {
+                images[index] = img;
+                frameStatus[index] = 2;
+                loadedFrameCount += 1;
+                resolve(img);
             } else {
-                isLoaded = true;
-                setTimeout(() => {
-                    if (preloader) {
-                        preloader.classList.add('loaded');
-                    }
-                    resolve();
-                }, 400); // Smooth settlement transition
+                frameStatus[index] = 3;
+                failedFrameCount += 1;
+                if (failedFrameCount === 1) {
+                    console.warn(`Could not load animation frame ${frameUrl(index)}. The procedural backdrop will remain as a fallback.`);
+                }
+                resolve(null);
             }
         };
-        
-        requestAnimationFrame(updateProgress);
+
+        img.onload = () => settle(true);
+        img.onerror = () => settle(false);
+        img.src = frameUrl(index);
     });
+
+    return framePromises[index];
+};
+
+const preloadFrameIndices = async (indices, concurrency = PRELOAD_CONCURRENCY, onSettled = null) => {
+    if (!indices.length) return;
+
+    let cursor = 0;
+    const workerCount = Math.max(1, Math.min(concurrency, indices.length));
+
+    const workers = Array.from({ length: workerCount }, async () => {
+        while (cursor < indices.length) {
+            const index = indices[cursor++];
+            await loadFrame(index);
+            if (onSettled) onSettled(index);
+        }
+    });
+
+    await Promise.all(workers);
+};
+
+const preloadRemainingFrames = async () => {
+    // First pass: one frame every 8 indices, so every scroll position has a nearby fallback.
+    const keyFrames = [];
+    for (let i = INITIAL_PRELOAD_COUNT; i < TOTAL_FRAMES; i += 8) {
+        keyFrames.push(i);
+    }
+    keyFrames.push(TOTAL_FRAMES - 1);
+    await preloadFrameIndices(keyFrames, 4);
+
+    // Second pass: fill in the gaps.
+    const remaining = [];
+    for (let i = INITIAL_PRELOAD_COUNT; i < TOTAL_FRAMES; i += 1) {
+        if (frameStatus[i] === 0) remaining.push(i);
+    }
+    await preloadFrameIndices(remaining, PRELOAD_CONCURRENCY);
+
+    if (failedFrameCount > 0) {
+        console.warn(`${failedFrameCount} animation frame(s) could not be loaded; the nearest available frame is used.`);
+    }
+};
+
+const preloadImages = async () => {
+    const preloader = document.getElementById('preloader');
+    const startTime = performance.now();
+    const minimumDuration = 1200;
+    const initialIndices = Array.from(
+        { length: Math.min(INITIAL_PRELOAD_COUNT, TOTAL_FRAMES) },
+        (_, index) => index
+    );
+
+    let settled = 0;
+    updatePreloaderUI(0);
+
+    await preloadFrameIndices(initialIndices, 4, () => {
+        settled += 1;
+        updatePreloaderUI((settled / initialIndices.length) * 100);
+    });
+
+    const elapsed = performance.now() - startTime;
+    if (elapsed < minimumDuration) {
+        await new Promise((r) => setTimeout(r, minimumDuration - elapsed));
+    }
+
+    isLoaded = true;
+    updatePreloaderUI(100);
+
+    if (preloader) {
+        preloader.classList.add('loaded');
+    }
+
+    // Continue loading the rest of the sequence without blocking the page.
+    preloadRemainingFrames();
+};
+
+/* =========================================================================
+   1b. FRAME LOOKUP & RENDER LAYER
+   ========================================================================= */
+const getNearestLoadedFrame = (frameIndex) => {
+    const clamped = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(frameIndex)));
+
+    if (frameStatus[clamped] === 2) {
+        return images[clamped];
+    }
+
+    // Walk outward so fast scrubs still show the closest available frame.
+    for (let offset = 1; offset < TOTAL_FRAMES; offset += 1) {
+        const before = clamped - offset;
+        const after = clamped + offset;
+
+        if (before >= 0 && frameStatus[before] === 2) return images[before];
+        if (after < TOTAL_FRAMES && frameStatus[after] === 2) return images[after];
+    }
+
+    return null;
+};
+
+const drawFrameLayer = (frameIdx) => {
+    if (!gridCtx || !gridCanvas) return false;
+
+    const frame = getNearestLoadedFrame(frameIdx);
+    if (!frame) return false;
+
+    gridCtx.save();
+    gridCtx.fillStyle = '#000000';
+    gridCtx.fillRect(0, 0, gridCanvas.width, gridCanvas.height);
+    drawImageCover(
+        gridCtx,
+        frame,
+        0,
+        0,
+        gridCanvas.width,
+        gridCanvas.height
+    );
+    gridCtx.restore();
+    return true;
 };
 
 /* =========================================================================
@@ -146,9 +294,9 @@ const drawImageCover = (ctx, img, x, y, w, h, offsetX = 0.5, offsetY = 0.5) => {
 };
 
 /* =========================================================================
-   3. PROCEDURAL VOLUMETRIC NEBULA BACKDROP (REPLACES PHYSICAL JPG FRAMES)
+   3. PROCEDURAL VOLUMETRIC NEBULA OVERLAY (FALLBACK + FRAME ENHANCEMENT)
    ========================================================================= */
-const drawProceduralNebula = (frameIdx) => {
+const drawProceduralNebula = (frameIdx, hasFrame = false) => {
     if (frameIdx >= SINGULARITY_FRAME) return; // Only draw in dark space phase
     
     const w = gridCanvas.width;
@@ -163,15 +311,17 @@ const drawProceduralNebula = (frameIdx) => {
     
     gridCtx.save();
     
-    // Base solid space backing
-    gridCtx.fillStyle = '#000000';
-    gridCtx.fillRect(0, 0, w, h);
+    // Solid space backing only when no frame image is available (fallback mode)
+    if (!hasFrame) {
+        gridCtx.fillStyle = '#000000';
+        gridCtx.fillRect(0, 0, w, h);
+    }
     
     // Nebulae 1: Deep Indigo Cosmic Dust
     const nebRadius1 = Math.max(w, h) * 0.95 * compression;
     const grad1 = gridCtx.createRadialGradient(cx, cy, 0, cx, cy, nebRadius1);
-    grad1.addColorStop(0, 'rgba(8, 0, 36, 0.45)');
-    grad1.addColorStop(0.5, 'rgba(4, 0, 16, 0.25)');
+    grad1.addColorStop(0, hasFrame ? 'rgba(8, 0, 36, 0.22)' : 'rgba(8, 0, 36, 0.45)');
+    grad1.addColorStop(0.5, hasFrame ? 'rgba(4, 0, 16, 0.12)' : 'rgba(4, 0, 16, 0.25)');
     grad1.addColorStop(1, 'rgba(0, 0, 0, 0)');
     gridCtx.fillStyle = grad1;
     gridCtx.fillRect(0, 0, w, h);
@@ -181,8 +331,8 @@ const drawProceduralNebula = (frameIdx) => {
     const nebX = cx + Math.sin(gridTime * 0.4) * 30 * compression;
     const nebY = cy + Math.cos(gridTime * 0.4) * 20 * compression;
     const grad2 = gridCtx.createRadialGradient(nebX, nebY, 10, nebX, nebY, nebRadius2);
-    grad2.addColorStop(0, 'rgba(32, 0, 56, 0.35)');
-    grad2.addColorStop(0.6, 'rgba(12, 0, 24, 0.15)');
+    grad2.addColorStop(0, hasFrame ? 'rgba(32, 0, 56, 0.18)' : 'rgba(32, 0, 56, 0.35)');
+    grad2.addColorStop(0.6, hasFrame ? 'rgba(12, 0, 24, 0.08)' : 'rgba(12, 0, 24, 0.15)');
     grad2.addColorStop(1, 'rgba(0, 0, 0, 0)');
     gridCtx.fillStyle = grad2;
     gridCtx.fillRect(0, 0, w, h);
@@ -191,7 +341,7 @@ const drawProceduralNebula = (frameIdx) => {
     if (progress > 0.3) {
         const nebRadius3 = Math.min(w, h) * 0.38 * (0.5 + progress * 0.5) * compression;
         const grad3 = gridCtx.createRadialGradient(cx, cy, 2, cx, cy, nebRadius3);
-        const nebOpacity = 0.26 * Math.pow((progress - 0.3) / 0.7, 2);
+        const nebOpacity = (hasFrame ? 0.16 : 0.26) * Math.pow((progress - 0.3) / 0.7, 2);
         grad3.addColorStop(0, `rgba(0, 240, 255, ${nebOpacity})`);
         grad3.addColorStop(0.4, `rgba(0, 100, 255, ${nebOpacity * 0.45})`);
         grad3.addColorStop(1, 'rgba(0, 0, 0, 0)');
@@ -1270,7 +1420,7 @@ const tickAnimationLoop = () => {
         // Add dynamic camera drift in the white dimension (frameIdx >= 180) to make it feel breathing & alive
         let driftX = 0;
         let driftY = 0;
-        if (roundedFrame >= 180) {
+        if (!prefersReducedMotion && roundedFrame >= 180) {
             const driftProgress = (roundedFrame - 180) / 60;
             driftX = Math.sin(gridTime * 0.5) * 14 * Math.min(1.0, driftProgress);
             driftY = Math.cos(gridTime * 0.4) * 10 * Math.min(1.0, driftProgress);
@@ -1283,8 +1433,11 @@ const tickAnimationLoop = () => {
             // Clear canvas ONCE at the start of the frame!
             gridCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
             
-            // Draw the procedural deep space nebulae
-            drawProceduralNebula(roundedFrame);
+            // Draw the real scroll-frame sequence as the visual base layer
+            const hasFrame = drawFrameLayer(roundedFrame);
+
+            // Draw the procedural deep space nebulae as an overlay or fallback
+            drawProceduralNebula(roundedFrame, hasFrame);
             
             drawSpacetimeGrid(roundedFrame);
             drawProceduralCore(roundedFrame);
@@ -1530,16 +1683,19 @@ const initApplication = () => {
                 initWebAudio();
                 if (audioEnabled) {
                     audioBtn.classList.add('playing');
+                    audioBtn.setAttribute('aria-pressed', 'true');
                     if (audioStatusText) audioStatusText.textContent = "SOUND ON";
                 }
             } else {
                 if (audioCtx.state === 'suspended') {
                     audioCtx.resume();
                     audioBtn.classList.add('playing');
+                    audioBtn.setAttribute('aria-pressed', 'true');
                     if (audioStatusText) audioStatusText.textContent = "SOUND ON";
                 } else if (audioCtx.state === 'running') {
                     audioCtx.suspend();
                     audioBtn.classList.remove('playing');
+                    audioBtn.setAttribute('aria-pressed', 'false');
                     if (audioStatusText) audioStatusText.textContent = "SOUND OFF";
                 }
             }

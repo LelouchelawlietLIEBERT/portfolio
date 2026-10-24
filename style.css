@@ -476,6 +476,7 @@ body.luminous-mode .audio-control-btn {
     margin-bottom: 2rem;
     text-transform: uppercase;
     color: var(--body-color);
+    text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
     transition: color var(--transition-slow);
 }
 
@@ -485,6 +486,7 @@ body.luminous-mode .audio-control-btn {
     color: var(--body-muted);
     line-height: 1.7;
     margin-bottom: 2rem;
+    text-shadow: 0 1px 16px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.45);
     transition: color var(--transition-slow);
 }
 
@@ -590,6 +592,12 @@ body.luminous-mode .restart-experience:hover .restart-text {
     width: 100% !important;
 }
 
+/* The terminus is a full-width identity card; without this it inherits the
+   600px text-center measure and the display title wraps into three lines. */
+.full-page-content {
+    max-width: 1000px;
+}
+
 /* 01. Projects Spacetime Grid (Section 3 Horizon) */
 .projects-spacetime-grid {
     display: grid;
@@ -601,18 +609,51 @@ body.luminous-mode .restart-experience:hover .restart-text {
 
 .project-glass-card {
     position: relative;
-    background: rgba(0, 0, 0, 0.45);
-    border: 1px solid rgba(0, 240, 255, 0.12);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(16px) saturate(130%);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+    border: 1px solid rgba(0, 240, 255, 0.18);
     border-radius: 1.5rem;
     padding: 2.5rem 2rem;
     overflow: hidden;
     text-align: left;
     cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.24);
     
     /* Hardware accelerated hover ease */
     will-change: transform, border-color, box-shadow;
     transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.6s ease, box-shadow 0.6s ease;
 }
+
+.project-glass-card:focus-visible {
+    outline: 2px solid var(--cyan-solid);
+    outline-offset: 4px;
+}
+
+.project-source-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 1.35rem;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    color: rgba(255, 255, 255, 0.72);
+    text-transform: uppercase;
+    transition: color var(--transition-fast);
+}
+
+.project-glass-card:hover .project-source-link,
+.project-glass-card:focus-visible .project-source-link {
+    color: var(--cyan-solid);
+}
+
 
 .card-glow {
     position: absolute;
@@ -658,9 +699,10 @@ body.luminous-mode .restart-experience:hover .restart-text {
 
 .project-desc {
     font-size: 0.88rem;
-    color: rgba(255, 255, 255, 0.55);
+    color: rgba(255, 255, 255, 0.78);
     line-height: 1.65;
     margin-bottom: 2rem;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4);
 }
 
 .project-tech-tags {
@@ -1416,17 +1458,44 @@ body.luminous-mode .panel-scanner {
    RESPONSIVE DESIGN ADAPTATIONS FOR SECTION 4
    ---------------------------------------------------- */
 @media (max-width: 1024px) {
+    /* Sections are pinned to the viewport, so long content must scroll inside
+       the section rather than being cropped above and below the fold. */
+    .section-content {
+        max-height: calc(100vh - 12rem);
+        max-height: calc(100dvh - 12rem);
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0, 240, 255, 0.45) transparent;
+    }
+
+    .section-content::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .section-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .section-content::-webkit-scrollbar-thumb {
+        background: rgba(0, 240, 255, 0.35);
+        border-radius: 4px;
+    }
+
     .singularity-layout {
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
         gap: 1.5rem;
-        padding-top: 2rem;
+        height: auto;
+        padding-top: 0;
     }
     
     .hologram-panel {
         width: 100%;
         max-width: 500px;
         padding: 1.5rem 1.8rem;
+        flex-shrink: 0;
     }
     
     .hologram-panel.left-panel {
@@ -1434,6 +1503,8 @@ body.luminous-mode .panel-scanner {
     }
     .constellation-frame {
         order: 2;
+        flex: 0 0 auto;
+        height: 250px;
         min-height: 250px;
     }
     .hologram-panel.right-panel {
@@ -1475,5 +1546,15 @@ body.luminous-mode .panel-scanner {
     .left-panel {
         max-height: 200px;
         overflow-y: auto;
+    }
+}
+
+/* Respect reduced-motion preferences without removing the scroll-driven sequence */
+@media (prefers-reduced-motion: reduce) {
+    .indicator-dot,
+    .panel-scanner,
+    .interaction-hint,
+    .audio-control-btn.playing .wave-bar {
+        animation: none !important;
     }
 }
